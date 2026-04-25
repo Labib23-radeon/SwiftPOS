@@ -1,0 +1,51 @@
+{
+  "name": "swiftpos",
+  "version": "1.0.0",
+  "description": "Smart Retail Checkout System",
+  "main": "main.js",
+  "scripts": {
+    "start": "concurrently \"npm run start:frontend\" \"wait-on http://localhost:5173 && electron .\"",
+    "start:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "pack": "npm run build:frontend && electron-builder --dir",
+    "dist": "npm run build:frontend && electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "build": {
+    "appId": "com.swiftpos.app",
+    "productName": "SwiftPOS",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "main.js",
+      "backend/**/*",
+      "frontend/dist/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "electron": "^40.8.0",
+    "electron-builder": "^24.13.3",
+    "wait-on": "^9.0.4"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.1",
+    "express-rate-limit": "^8.4.1",
+    "localtunnel": "^2.0.2",
+    "socket.io": "^4.8.3",
+    "sqlite3": "^5.1.7"
+  }
+}
