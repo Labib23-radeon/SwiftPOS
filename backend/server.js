@@ -3,6 +3,7 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const localtunnel = require('localtunnel');
 const { initDb, getDb } = require('./database');
 
 const app = express();
@@ -130,25 +131,55 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
-// GET local network IP for mobile scanner
+// GET local network IP and Tunnel URL for mobile scanner
 const os = require('os');
 app.get('/api/ip', (req, res) => {
   const nets = os.networkInterfaces();
+  let ip = 'localhost';
   for (const name of Object.keys(nets)) {
     for (const net of nets[name]) {
       // Skip over non-IPv4 and internal (i.e. 127.0.0.1)
       if (net.family === 'IPv4' && !net.internal) {
-        return res.json({ ip: net.address });
+        ip = net.address;
+        break;
       }
     }
+    if (ip !== 'localhost') break;
   }
-  res.json({ ip: 'localhost' });
+  res.json({ ip, tunnelUrl: req.app.locals.tunnelUrl });
+});
+
+// Generic error handler middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled server error:', err.stack);
+  res.status(500).json({ error: 'Internal Server Error' });
 });
 
 function initServer(userDataPath, port = 3001) {
   initDb(userDataPath);
-  server.listen(port, '0.0.0.0', () => {
+  
+  server.on('error', (e) => {
+    if (e.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use. Please close any other instances.`);
+    } else {
+      console.error(`Server error: ${e.message}`);
+    }
+  });
+
+  server.listen(port, '0.0.0.0', async () => {
     console.log(`Backend running on http://localhost:${port}`);
+    
+    try {
+      const tunnel = await localtunnel({ port: port });
+      console.log(`Secure Tunnel running at: ${tunnel.url}`);
+      app.locals.tunnelUrl = tunnel.url;
+      
+      tunnel.on('close', () => {
+        console.log('Tunnel closed');
+      });
+    } catch (err) {
+      console.error('Failed to start localtunnel:', err);
+    }
   });
   return { app, server, io };
 }

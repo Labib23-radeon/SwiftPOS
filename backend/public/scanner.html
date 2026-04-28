@@ -199,6 +199,28 @@
         const statusEl = document.getElementById('status');
         const manualInput = document.getElementById('manual-barcode');
 
+        // Audio context for beep sound
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const beepContext = AudioContext ? new AudioContext() : null;
+
+        function playBeep() {
+            if (!beepContext) return;
+            try {
+                const oscillator = beepContext.createOscillator();
+                const gainNode = beepContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(beepContext.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, beepContext.currentTime);
+                gainNode.gain.setValueAtTime(0.5, beepContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, beepContext.currentTime + 0.1);
+                oscillator.start(beepContext.currentTime);
+                oscillator.stop(beepContext.currentTime + 0.1);
+            } catch (e) {
+                console.log('Audio playback failed');
+            }
+        }
+
         socket.on('connect', () => {
             statusEl.textContent = '🟢 Connected & Ready';
             statusEl.className = 'status-card success';
@@ -220,11 +242,23 @@
             setTimeout(() => statusEl.style.transform = 'scale(1)', 200);
 
             if ("vibrate" in navigator) {
-                navigator.vibrate(200);
+                navigator.vibrate(100);
             }
+            playBeep();
         }
 
+        // To prevent double scanning of the same barcode too quickly
+        let lastScanned = '';
+        let lastScannedTime = 0;
+
         function onScanSuccess(decodedText, decodedResult) {
+            const now = Date.now();
+            // Prevent scanning same code within 2 seconds
+            if (decodedText === lastScanned && (now - lastScannedTime) < 2000) {
+                return;
+            }
+            lastScanned = decodedText;
+            lastScannedTime = now;
             sendBarcode(decodedText);
         }
 

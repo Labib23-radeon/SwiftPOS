@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
+import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
 
 export default function RegisterProductModal({ barcode, onClose, onRegister }) {
@@ -14,7 +15,7 @@ export default function RegisterProductModal({ barcode, onClose, onRegister }) {
     if (!name || !price) return;
     setLoading(true);
     try {
-      const resp = await axios.post('http://localhost:3001/api/products', {
+      const resp = await api.post('/products', {
         name, 
         barcode, 
         price: parseFloat(price), 
@@ -23,7 +24,7 @@ export default function RegisterProductModal({ barcode, onClose, onRegister }) {
       });
       onRegister(resp.data);
     } catch (err) {
-      alert('Error registering product: ' + (err.response?.data?.error || err.message));
+      toast.error('Error registering product: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }

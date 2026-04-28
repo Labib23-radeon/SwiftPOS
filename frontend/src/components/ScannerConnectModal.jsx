@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
-import { X, Smartphone, Wifi, AlertTriangle } from 'lucide-react';
+import { X, Smartphone, Wifi, ShieldCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import axios from 'axios';
+import api from '../api';
 
 export default function ScannerConnectModal({ onClose }) {
   const [localIp, setLocalIp] = useState('');
+  const [tunnelUrl, setTunnelUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    axios.get('http://localhost:3001/api/ip')
-      .then(res => setLocalIp(res.data.ip))
-      .catch(err => console.error('Failed to get IP', err));
+    api.get('/ip')
+      .then(res => {
+        setLocalIp(res.data.ip);
+        setTunnelUrl(res.data.tunnelUrl);
+      })
+      .catch(err => console.error('Failed to get IP', err))
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const scannerUrl = `http://${localIp || 'localhost'}:3001/scanner`;
+  const scannerUrl = tunnelUrl ? `${tunnelUrl}/scanner` : `http://${localIp || 'localhost'}:3001/scanner`;
 
   return (
     <div className="modal-overlay">
@@ -28,14 +34,14 @@ export default function ScannerConnectModal({ onClose }) {
 
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', display: 'inline-block', marginBottom: '1rem' }}>
-            {localIp ? (
+            {!isLoading ? (
               <QRCodeSVG value={scannerUrl} size={200} />
             ) : (
               <div style={{ width: 200, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9', color: '#000' }}>Loading...</div>
             )}
           </div>
           <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>
-            {scannerUrl}
+            {isLoading ? 'Connecting...' : scannerUrl}
           </div>
         </div>
 
@@ -50,12 +56,12 @@ export default function ScannerConnectModal({ onClose }) {
           </ol>
         </div>
 
-        <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid var(--warning)', padding: '1rem', borderRadius: 'var(--radius-md)', marginTop: '1rem', color: 'var(--warning)', fontSize: '0.85rem' }}>
+        <div style={{ backgroundColor: tunnelUrl ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)', border: `1px solid ${tunnelUrl ? 'var(--success)' : 'var(--warning)'}`, padding: '1rem', borderRadius: 'var(--radius-md)', marginTop: '1rem', color: tunnelUrl ? 'var(--success)' : 'var(--warning)', fontSize: '0.85rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-            <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+            <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <strong>Camera Permission Note:</strong> Modern phone browsers block camera access on non-secure (HTTP) connections. <br/>
-              To fix this on Android Chrome: go to <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code> on your phone, add <code>{scannerUrl}</code> to the list, enable it, and restart your browser!
+              <strong>Secure Connection Active:</strong> Your connection is secured via a tunnel. This allows the mobile browser to access your camera without any complicated settings!
+              {tunnelUrl && <div><br/><em>Note: The first time you visit this link, you may need to click "Click to Continue" on the security page.</em></div>}
             </div>
           </div>
         </div>

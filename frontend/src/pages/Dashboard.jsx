@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
+import toast from 'react-hot-toast';
 import { DollarSign, ShoppingBag, AlertTriangle } from 'lucide-react';
 
 export default function Dashboard() {
@@ -10,9 +11,10 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axios.get('http://localhost:3001/api/stats');
+        const res = await api.get('/stats');
         setStats(res.data);
       } catch (err) {
+        toast.error('Failed to load dashboard statistics');
         console.error(err);
       } finally {
         setLoading(false);

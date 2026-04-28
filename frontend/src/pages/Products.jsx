@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
+import toast from 'react-hot-toast';
 import { PackagePlus, Edit, Trash2 } from 'lucide-react';
 
 export default function Products() {
@@ -9,9 +10,10 @@ export default function Products() {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:3001/api/products');
+      const res = await api.get('/products');
       setProducts(res.data);
     } catch (err) {
+      toast.error('Failed to fetch products');
       console.error(err);
     } finally {
       setLoading(false);

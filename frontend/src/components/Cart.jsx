@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
+import toast from 'react-hot-toast';
 import CheckoutModal from './CheckoutModal';
 import ReceiptModal from './ReceiptModal';
 
@@ -38,7 +39,7 @@ export default function Cart({ items, setItems }) {
         change,
         items: items.map(i => ({ id: i.id, quantity: i.qty, price: i.price }))
       };
-      const res = await axios.post('http://localhost:3001/api/checkout', payload);
+      const res = await api.post('/checkout', payload);
       
       setShowCheckout(false);
       setReceiptData({
@@ -49,8 +50,9 @@ export default function Cart({ items, setItems }) {
         change
       });
       setItems([]); // Clear cart
+      toast.success('Checkout completed successfully');
     } catch (err) {
-      alert('Checkout failed: ' + (err.response?.data?.error || err.message));
+      toast.error('Checkout failed: ' + (err.response?.data?.error || err.message));
     } finally {
       setIsProcessing(false);
     }
