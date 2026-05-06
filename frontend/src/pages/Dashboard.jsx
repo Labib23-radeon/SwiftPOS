@@ -27,48 +27,59 @@ export default function Dashboard() {
 
   return (
     <div style={{ padding: '1rem', width: '100%', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <h2 style={{ margin: 0 }}>Analytics Dashboard</h2>
+      <div>
+        <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: '700' }}>Analytics Dashboard</h2>
+        <p style={{ margin: '0.2rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Here is what's happening with your store today.</p>
+      </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
         
-        <div style={{ backgroundColor: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', padding: '1rem', borderRadius: '50%', color: 'var(--primary)' }}>
+        <div style={{ backgroundColor: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(59, 130, 246, 0.2)', display: 'flex', alignItems: 'center', gap: '1.5rem', boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.1)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)', borderRadius: '50%' }} />
+          <div style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', padding: '1.2rem', borderRadius: 'var(--radius-md)', color: 'var(--primary)' }}>
             <DollarSign size={32} />
           </div>
-          <div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Daily Revenue</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{currency}{(stats.dailyRevenue || 0).toFixed(2)}</div>
+          <div style={{ zIndex: 1 }}>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '500', marginBottom: '0.2rem' }}>Daily Revenue</div>
+            <div style={{ fontSize: '2.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{currency}{(stats.dailyRevenue || 0).toFixed(2)}</div>
           </div>
         </div>
 
-        <div style={{ backgroundColor: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '1rem', borderRadius: '50%', color: 'var(--success)' }}>
+        <div style={{ backgroundColor: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', gap: '1.5rem', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.1)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '-20px', right: '-20px', width: '100px', height: '100px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%)', borderRadius: '50%' }} />
+          <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', padding: '1.2rem', borderRadius: 'var(--radius-md)', color: 'var(--success)' }}>
             <ShoppingBag size={32} />
           </div>
-          <div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Transactions</div>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{stats.transactions || 0}</div>
+          <div style={{ zIndex: 1 }}>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', fontWeight: '500', marginBottom: '0.2rem' }}>Transactions</div>
+            <div style={{ fontSize: '2.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{stats.transactions || 0}</div>
           </div>
         </div>
 
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
-        <div style={{ backgroundColor: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--danger)', overflow: 'hidden' }}>
-          <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--danger)', fontWeight: 'bold' }}>
-            <AlertTriangle size={20} /> Low Stock Alerts
+        <div style={{ backgroundColor: 'var(--surface-color)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--danger)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ padding: '1.2rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.8rem', color: 'var(--danger)', fontWeight: '700', backgroundColor: 'rgba(244, 63, 94, 0.05)' }}>
+            <AlertTriangle size={22} /> Low Stock Alerts
           </div>
-          <div style={{ padding: '1rem' }}>
+          <div style={{ padding: '0' }}>
             {stats.lowStockItems.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)', margin: 0 }}>All items have sufficient stock level.</p>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>All items have sufficient stock level.</div>
             ) : (
-              <ul style={{ margin: 0, paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {stats.lowStockItems.map(item => (
-                  <li key={item.id} style={{ color: 'var(--text-primary)' }}>
-                    <strong>{item.name}</strong> has only <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>{item.stock}</span> left. (Barcode: {item.barcode})
-                  </li>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {stats.lowStockItems.map((item, idx) => (
+                  <div key={item.id} style={{ padding: '1.2rem 1.5rem', borderBottom: idx === stats.lowStockItems.length - 1 ? 'none' : '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ fontSize: '1.05rem' }}>{item.name}</strong>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>Barcode: {item.barcode}</div>
+                    </div>
+                    <div style={{ backgroundColor: 'rgba(244, 63, 94, 0.1)', color: 'var(--danger)', padding: '0.4rem 1rem', borderRadius: 'var(--radius-full)', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                      {item.stock} left
+                    </div>
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
         </div>

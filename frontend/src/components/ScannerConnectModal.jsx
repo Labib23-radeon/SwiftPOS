@@ -1,24 +1,24 @@
 import { useState, useEffect } from 'react';
-import { X, Smartphone, Wifi, ShieldCheck } from 'lucide-react';
+import { X, Smartphone, Wifi, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../api';
 
 export default function ScannerConnectModal({ onClose }) {
   const [localIp, setLocalIp] = useState('');
-  const [tunnelUrl, setTunnelUrl] = useState('');
+  const [httpsPort, setHttpsPort] = useState(3002);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     api.get('/ip')
       .then(res => {
         setLocalIp(res.data.ip);
-        setTunnelUrl(res.data.tunnelUrl);
+        if (res.data.httpsPort) setHttpsPort(res.data.httpsPort);
       })
       .catch(err => console.error('Failed to get IP', err))
       .finally(() => setIsLoading(false));
   }, []);
 
-  const scannerUrl = tunnelUrl ? `${tunnelUrl}/scanner` : `http://${localIp || 'localhost'}:3001/scanner`;
+  const scannerUrl = `https://${localIp || 'localhost'}:${httpsPort}/scanner`;
 
   return (
     <div className="modal-overlay">
@@ -50,18 +50,20 @@ export default function ScannerConnectModal({ onClose }) {
             <Wifi size={18} /> How to connect:
           </h3>
           <ol style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <li>Ensure your phone is on the <strong>same Wi-Fi network</strong> as this computer.</li>
-            <li>Open your phone's camera and scan the QR code above.</li>
-            <li>Alternatively, type the URL directly into your mobile browser.</li>
+            <li>Ensure your phone is on the <strong>same Wi-Fi network</strong>.</li>
+            <li>Scan the QR code with your phone's camera.</li>
+            <li>If the site can't be reached, run <strong>fix-firewall.bat</strong> in the project folder as Administrator.</li>
           </ol>
         </div>
 
-        <div style={{ backgroundColor: tunnelUrl ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)', border: `1px solid ${tunnelUrl ? 'var(--success)' : 'var(--warning)'}`, padding: '1rem', borderRadius: 'var(--radius-md)', marginTop: '1rem', color: tunnelUrl ? 'var(--success)' : 'var(--warning)', fontSize: '0.85rem' }}>
+        <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid var(--warning)', padding: '1rem', borderRadius: 'var(--radius-md)', marginTop: '1rem', color: 'var(--warning)', fontSize: '0.85rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-            <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+            <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <strong>Secure Connection Active:</strong> Your connection is secured via a tunnel. This allows the mobile browser to access your camera without any complicated settings!
-              {tunnelUrl && <div><br/><em>Note: The first time you visit this link, you may need to click "Click to Continue" on the security page.</em></div>}
+              <strong>Security Warning Notice:</strong><br/>
+              Because this app runs locally, your phone browser will show a "Your connection is not private" warning.
+              <br/><br/>
+              <strong>To fix this:</strong> Click <strong>Advanced</strong> -&gt; <strong>Proceed to 192.168... (unsafe)</strong>. This allows the camera to work perfectly!
             </div>
           </div>
         </div>

@@ -1,9 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const https = require('https');
+const selfsigned = require('selfsigned');
 const { Server } = require('socket.io');
 const path = require('path');
-const localtunnel = require('localtunnel');
 const { initDb, getDb } = require('./database');
 
 const app = express();
@@ -146,7 +147,7 @@ app.get('/api/ip', (req, res) => {
     }
     if (ip !== 'localhost') break;
   }
-  res.json({ ip, tunnelUrl: req.app.locals.tunnelUrl });
+  res.json({ ip, httpsPort: req.app.locals.httpsPort || 3002 });
 });
 
 // Generic error handler middleware
@@ -166,21 +167,58 @@ function initServer(userDataPath, port = 3001) {
     }
   });
 
-  server.listen(port, '0.0.0.0', async () => {
+  server.listen(port, '0.0.0.0', () => {
     console.log(`Backend running on http://localhost:${port}`);
-    
+  });
+
+  // Start HTTPS server on port + 1 to bypass mobile camera restrictions
+  (async () => {
     try {
-      const tunnel = await localtunnel({ port: port });
-      console.log(`Secure Tunnel running at: ${tunnel.url}`);
-      app.locals.tunnelUrl = tunnel.url;
+      const os = require('os');
+      const nets = os.networkInterfaces();
+      let ip = 'localhost';
+      for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+          if (net.family === 'IPv4' && !net.internal) {
+            ip = net.address;
+            break;
+          }
+        }
+        if (ip !== 'localhost') break;
+      }
+
+      const attrs = [{ name: 'commonName', value: ip }];
+      const opts = {
+        days: 365,
+        extensions: [{
+          name: 'subjectAltName',
+          altNames: [
+            { type: 2, value: 'localhost' }, // DNS
+            { type: 7, ip: '127.0.0.1' },    // IP
+            { type: 7, ip: ip }              // IP
+          ]
+        }]
+      };
       
-      tunnel.on('close', () => {
-        console.log('Tunnel closed');
+      const pems = await selfsigned.generate(attrs, opts);
+      const httpsServer = https.createServer({ key: pems.private, cert: pems.cert }, app);
+      io.attach(httpsServer);
+      
+      const httpsPort = parseInt(port) + 1;
+      app.locals.httpsPort = httpsPort;
+      
+      httpsServer.listen(httpsPort, '0.0.0.0', () => {
+        console.log(`Secure Backend running on https://localhost:${httpsPort}`);
+      });
+      
+      httpsServer.on('error', (e) => {
+        console.error(`HTTPS Server error: ${e.message}`);
       });
     } catch (err) {
-      console.error('Failed to start localtunnel:', err);
+      console.error('Failed to start local HTTPS server:', err);
     }
-  });
+  })();
+
   return { app, server, io };
 }
 

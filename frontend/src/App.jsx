@@ -65,6 +65,25 @@ function App() {
     return () => socket.disconnect();
   }, [addToCart]);
 
+  const handleManualBarcode = async (barcode) => {
+    if (!barcode.trim()) return;
+    try {
+      const res = await api.get(`/products/${barcode}`);
+      addToCart(res.data);
+      toast.success(`Added ${res.data.name} to cart`);
+      setSearchQuery(''); // clear after success
+    } catch (err) {
+      if (err.response && err.response.status === 404) {
+        setScannedBarcode(barcode);
+        setShowRegisterModal(true);
+        toast('Unknown barcode scanned', { icon: '🔍' });
+        setSearchQuery('');
+      } else {
+        toast.error('Error finding product');
+      }
+    }
+  };
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -91,41 +110,13 @@ function App() {
         }} />
         <Sidebar />
         <div className="main-content">
-          <Navbar theme={theme} toggleTheme={toggleTheme} />
+          <Navbar theme={theme} toggleTheme={toggleTheme} searchQuery={searchQuery} setSearchQuery={setSearchQuery} onSearchEnter={handleManualBarcode} />
           <div className="content-area">
             <Routes>
               <Route path="/" element={
                 <>
                   <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '1rem', overflow: 'hidden' }}>
-                    <div className="search-container" style={{ padding: '0 1.5rem', marginTop: '1rem' }}>
-                      <input 
-                        type="text" 
-                        placeholder="Search products by name or barcode..." 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '0.8rem 1.2rem',
-                          borderRadius: 'var(--radius-full)',
-                          border: '1px solid var(--border-color)',
-                          backgroundColor: 'var(--surface-color)',
-                          color: 'var(--text-primary)',
-                          fontSize: '1rem',
-                          outline: 'none',
-                          boxShadow: 'var(--shadow-sm)',
-                          transition: 'border-color 0.2s ease, box-shadow 0.2s ease'
-                        }}
-                        onFocus={(e) => {
-                          e.target.style.borderColor = 'var(--primary)';
-                          e.target.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.2)';
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = 'var(--border-color)';
-                          e.target.style.boxShadow = 'var(--shadow-sm)';
-                        }}
-                      />
-                    </div>
-                    <div className="pos-grid" style={{ overflowY: 'auto' }}>
+                    <div className="pos-grid" style={{ overflowY: 'auto', paddingRight: '0.5rem' }}>
                       {filteredProducts.map(p => (
                         <ProductCard key={p.id} product={p} onClick={() => addToCart(p)} />
                       ))}
